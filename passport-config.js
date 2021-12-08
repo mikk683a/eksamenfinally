@@ -8,7 +8,7 @@ function initialize(passport, getUserByEmail, getUserById) {
     const user = getUserByEmail(email)
     if (user == null) {
       return done(null, false, { message: 'Ingen bruger med denne email' })
-    }
+    } 
 
     // tjekker om Adgangskoden matcher den der blev angivet ved registrering 
     // match = login, ingen match = ingenfejlkode, men message:
