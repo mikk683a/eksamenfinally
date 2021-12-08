@@ -50,7 +50,7 @@ app.use(session({
 
 // hoved funktionen fra passport-config.js
 app.use(passport.initialize())
-// gemmer værdierne i hele brugerens session (på tværs af alle siderne)
+// gemmer variablerne i hele brugerens session (på tværs af alle siderne)
 app.use(passport.session())
 app.use(methodOverride('_method'))
 
@@ -93,7 +93,7 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
     res.redirect('/login')
   
     // gemmer brugere i databasen (users.json)
-    fs.writeFileSync('database/users.json', JSON.stringify(users))
+    fs.writeFileSync('database/users.json', JSON.stringify(users, null, 2))
     console.log(users)
   } 
   catch {
@@ -150,9 +150,48 @@ goods.push({
   })
   res.redirect('/goods')
   // gemmer varer som json objekter i goods.json
-  fs.writeFileSync('database/goods.json', JSON.stringify(goods))
+  fs.writeFileSync('database/goods.json', JSON.stringify(goods, null, 2))
   console.log(goods)
 })
 
+//slet varer
+app.delete('/goods', checkAuthenticated, (req, res) => {
+goods.splice(0, goods.length)
+res.redirect('/')
+//sletter varer fra goods.json
+fs.writeFileSync('database/goods.json', JSON.stringify(goods, null, 2))
+console.log('varer slettet')
+})
 
-  app.listen(3000)
+// slet profil
+app.delete('/', checkAuthenticated, (req, res) => {
+req.logOut(users.splice(0, users.length))
+res.redirect('/login')
+//sletter profil fra users.json
+fs.writeFileSync('database/users.json', JSON.stringify(users, null, 2))
+})
+
+//Opdater profil
+app.get("/updateprofile", checkAuthenticated, (req, res) => {
+res.render("updateprofile.ejs")
+})
+app.put("/updateprofile", async (req, res) => {
+try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10)
+    // pusher opdateret information til arrayet "users"
+    users.push({
+        id: req.user.id,
+        name: req.body.name,
+        email: req.body.email,
+        password: hashedPassword
+    })
+   //sletter eksisterende oplysninger ved hjælp af splice
+    users.splice(0, 1);  
+    res.redirect("/") 
+    // henter opdateret information fra arrayet users og skriver det til users.json
+    fs.writeFileSync('database/users.json', JSON.stringify(users, null, 2)); 
+    console.log(users) 
+} catch {
+    res.redirect("/updateprofile") 
+}
+})
